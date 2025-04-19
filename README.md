@@ -2,7 +2,7 @@
 
 # Medical Insurance Premium Predictor
 
-This web application predicts medical insurance premiums based on user-provided input features. It utilizes a Linear Regression model trained on a dataset (likely `Medicalpremium.csv`). The application provides an interactive user interface to input patient details, view the predicted premium, and assess the model's performance through various visualizations and statistical summaries.
+This web application predicts medical insurance premiums based on user-provided input features. It utilizes a Linear Regression model trained on a dataset. The application provides an interactive user interface to input patient details, view the predicted premium, and assess the model's performance through various visualizations and statistical summaries.
 
 ## Features
 
