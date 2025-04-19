@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medical Insurance Premium Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e9ecef; /* A light gray */
+        }
+        .graph-img {
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .table th, .table td {
+            padding: 0.5rem !important;
+            font-size: 0.9rem;
+        }
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* Initial height, will be adjusted by JS */
+        }
+        .graph-selector-card {
+            margin-bottom: 20px; /* Add some space between the graph selector and results */
+        }
+        .performance-metrics-card {
+            margin-top: auto; /* Push the performance metrics to the bottom */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5 mb-5">
+    <h2 class="text-center mb-4">🩺 Medical Insurance Premium Predictor</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" class="card p-4 shadow-sm bg-white h-100">
+                <h5 class="mb-3">Enter Patient Details</h5>
+                {% for feature in features %}
+                    <div class="mb-3">
+                        <label for="{{ feature }}" class="form-label">{{ feature|capitalize }}</label>
+                        {% if unique_feature_values.get(feature) == [0, 1] %}
+                            <select class="form-select" id="{{ feature }}" name="{{ feature }}">
+                                <option value="">Select Yes/No</option>
+                                <option value="1" {% if input_values.get(feature) == 1 %}selected{% endif %}>Yes</option>
+                                <option value="0" {% if input_values.get(feature) == 0 %}selected{% endif %}>No</option>
+                            </select>
+                        {% else %}
+                            <input type="number" class="form-control" id="{{ feature }}" name="{{ feature }}"
+                                   value="{{ input_values.get(feature) if input_values.get(feature) is not none else '' }}"
+                                   placeholder="Enter value for {{ feature|lower }}">
+                            <small class="form-text text-muted">Please enter a numeric value.</small>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100">Predict Premium</button>
+            </form>
+        </div>
+
+        <div class="col-md-6 right-column">
+            <div class="card p-4 shadow-sm bg-white graph-selector-card">
+                <h5 class="text-center mb-3">📈 View Data Visualizations</h5>
+
+                <div class="mb-3">
+                    <label for="graphSelector" class="form-label">Select Graph:</label>
+                    <select id="graphSelector" class="form-select" onchange="changeGraph()">
+                        <option value="heatmap.png">Correlation Matrix</option>
+                        <option value="residuals.png">Residual Plot</option>
+                        <option value="actual_vs_predicted.png">Actual vs Predicted</option>
+                        {% for plot in distribution_plots %}
+                        <option value="{{ plot }}">Distribution of {{ plot.split('_')[1].split('.')[0]|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="text-center">
+                    <img id="graphDisplay" src="{{ url_for('static', filename='heatmap.png') }}" class="graph-img" alt="Graph">
+                </div>
+            </div>
+
+            {% if prediction %}
+                <div class="alert alert-success mt-2 text-center">
+                    <h4>Predicted Premium Price: ₹{{ prediction }}</h4>
+                </div>
+
+                <div class="card mt-3 p-3 performance-metrics-card">
+                    <p><strong>📊 Model Performance:</strong></p>
+                    <ul>
+                        <li><strong>Mean Squared Error:</strong> {{ mse }}</li>
+                        <li><strong>Root Mean Squared Error:</strong> {{ rmse }}</li>
+                        <li><strong>Mean Absolute Error:</strong> {{ mae }}</li>
+                        <li><strong>R² Score:</strong> {{ r2 }}</li>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mt-5 p-4 shadow-sm bg-white">
+        <h5 class="mb-3">📋 Summary Statistics</h5>
+        <div style="max-height: 350px; overflow-y: auto;">
+            <div class="table-responsive">
+                {{ summary_stats|safe }}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function changeGraph() {
+        const selectedGraph = document.getElementById("graphSelector").value;
+        document.getElementById("graphDisplay").src = "/static/" + selectedGraph;
+    }
+
+    function adjustRightColumnHeight() {
+        const leftColumn = document.querySelector('.col-md-6:first-child');
+        const rightColumn = document.querySelector('.col-md-6:last-child');
+
+        if (leftColumn && rightColumn) {
+            rightColumn.style.height = leftColumn.offsetHeight + 'px';
+        }
+    }
+
+    window.onload = adjustRightColumnHeight;
+    window.addEventListener('resize', adjustRightColumnHeight);
+</script>
+
+</body>
+</html>
